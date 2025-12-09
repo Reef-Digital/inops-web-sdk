@@ -36,21 +36,6 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Compute SRI
-        run: node scripts/sri.js > SRI.txt
-
-      - name: Upload Release Assets
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            dist/index.global.js
-            dist/index.global.js.map
-            dist/index.js
-            dist/index.js.map
-            dist/index.d.ts
-            SRI.txt
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Deploy
         uses: reggionick/s3-deploy@v4
         with:
