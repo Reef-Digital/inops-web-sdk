@@ -52,7 +52,7 @@ jobs:
       - name: Deploy
         uses: reggionick/s3-deploy@v4
         with:
-          folder: build
+          folder: dist
           bucket: ${{ vars.S3_BUCKET }}/inops-web-sdk@${{ steps.pkg.outputs.version }}
           bucket-region: ${{ vars.S3_BUCKET_REGION }}
           dist-id: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}
