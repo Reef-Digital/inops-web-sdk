@@ -23,7 +23,8 @@ Framework‑agnostic JavaScript SDK to embed Inops AI Search in any shop (Liquid
 </div>
 
 <script
-  src="https://cdn.inops.dev/inops-web-sdk@1.0.0/inops.min.js"
+  src="https://cdn.inops.io/inops-web-sdk@1.0.0/inops.min.js"
+  src="https://cdn.inops.io/inops-web-sdk@1.0.0/inops.min.js"
   integrity="sha384-mqekyj1Rt7b+a8CB7it1Uze5lwHffZgza+bqd/0ewQNnupKKN4fIWoKcQfCxa9Gi"
   crossorigin="anonymous"
   referrerpolicy="no-referrer">

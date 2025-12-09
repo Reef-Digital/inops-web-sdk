@@ -1,6 +1,6 @@
 {
   "name": "@inops/web-sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Inops Web SDK - zero-dependency browser bundle to embed AI Search in any shop.",
   "license": "MIT",
   "author": "Reef Digital",
@@ -30,4 +30,3 @@
     "typescript": "^5.6.3"
   }
 }
-
