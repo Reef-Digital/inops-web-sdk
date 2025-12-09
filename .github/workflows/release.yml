@@ -8,14 +8,25 @@ on:
 jobs:
   build-and-upload:
     runs-on: ubuntu-latest
+    environment: 'production'
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Configure AWS Credentials
+        id: configure-aws-credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: eu-central-1
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Read version from package.json
+        id: pkg
+        run: node -e "require('fs').appendFileSync(process.env.GITHUB_OUTPUT, 'version=' + require('./package.json').version + '\n')"
 
       - name: Install
         run: npm ci
@@ -38,7 +49,18 @@ jobs:
             SRI.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+      - name: Deploy
+        uses: reggionick/s3-deploy@v4
+        with:
+          folder: build
+          bucket: ${{ vars.S3_BUCKET }}/inops-web-sdk@${{ steps.pkg.outputs.version }}
+          bucket-region: ${{ vars.S3_BUCKET_REGION }}
+          dist-id: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}
+          invalidation: /
+          delete-removed: true
+          no-cache: true
+          private: true
+          files-to-include: '{.*/**,**}'
   # Optional: npm publish (requires NPM_TOKEN secret)
   # npm-publish:
   #   needs: build-and-upload
