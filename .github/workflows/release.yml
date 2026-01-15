@@ -37,17 +37,16 @@ jobs:
         run: npm run build
 
       - name: Deploy
-        uses: reggionick/s3-deploy@v4
-        with:
-          folder: dist
-          bucket: ${{ vars.S3_BUCKET }}/inops-web-sdk@${{ steps.pkg.outputs.version }}
-          bucket-region: ${{ vars.S3_BUCKET_REGION }}
-          dist-id: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}
-          invalidation: /
-          delete-removed: true
-          no-cache: true
-          private: true
-          files-to-include: '{.*/**,**}'
+        run: |
+          aws s3 sync dist/ s3://${{ vars.S3_BUCKET }}/inops-web-sdk@${{ steps.pkg.outputs.version }}/ \
+            --region ${{ vars.S3_BUCKET_REGION }} \
+            --delete \
+            --cache-control "public, max-age=31536000, immutable"
+          
+          # Invalidate CloudFront cache
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/inops-web-sdk@${{ steps.pkg.outputs.version }}/*" "/"
   # Optional: npm publish (requires NPM_TOKEN secret)
   # npm-publish:
   #   needs: build-and-upload
