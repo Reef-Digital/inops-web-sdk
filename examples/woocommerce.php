@@ -1,19 +1,15 @@
-{%- comment -%}
-Inops campaignId example (Shopify theme)
-
-Goal:
-If the visitor arrives with ?campaignId=summer_sale_1, we automatically show relevant products.
-
-Requirements:
-- Use your SearchKey (read-only) from the Inops portal.
-- Pin the SDK version + host from your CDN/build pipeline.
-
-{%- endcomment -%}
+<?php
+/**
+ * Inops campaignId example (WooCommerce / WordPress)
+ *
+ * Add this in a theme template or via a shortcode.
+ * Visitor arrives with ?campaignId=summer_sale_1 → show products automatically.
+ */
+?>
 
 <div id="inops-campaign-results" style="margin: 24px 0;"></div>
 
 <script>
-  // Optional: override API base (usually not needed in production)
   // window.__INOPS_API_BASE_URL__ = "https://api.inops.io";
 </script>
 
@@ -47,17 +43,16 @@ Requirements:
       "<div style='display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px'>" +
       products
         .map(function (p) {
+          // In WooCommerce you usually route to /product/<slug>. If you only have productId, you can map it server-side.
           return (
-            "<a href='/products/" +
-            encodeURIComponent(p.productId) +
-            "' style='text-decoration:none;border:1px solid #e5e7eb;border-radius:10px;padding:12px;display:block'>" +
+            "<div style='border:1px solid #e5e7eb;border-radius:10px;padding:12px'>" +
             "<div style='font-weight:600;color:#111827'>" +
             (p.title || p.productId) +
             "</div>" +
             "<div style='color:#6b7280;font-size:12px;margin-top:4px'>" +
             p.productId +
             "</div>" +
-            "</a>"
+            "</div>"
           );
         })
         .join("") +

@@ -1,25 +1,67 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Inops Web SDK - Plain Example</title>
+    <title>Inops – campaignId example</title>
     <style>
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Noto Sans", "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji"; padding: 24px; }
+      body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; margin: 24px; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+      .card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; background: #fff; }
+      .muted { color: #6b7280; font-size: 12px; }
     </style>
+    <script>
+      // Optional: override API base at runtime (useful for local dev)
+      // window.__INOPS_API_BASE_URL__ = "http://localhost:3000";
+    </script>
+    <!-- Use your pinned CDN build (example file name only). -->
+    <script src="../dist/index.js"></script>
   </head>
   <body>
-    <h1>Inops Web SDK - Plain Example</h1>
-    <p>Enter three words and press Enter.</p>
-    <div
-      data-widget="inops-search"
-      data-search-key="YOUR_SEARCH_KEY"
-      data-api-url="http://localhost:3000"
-      data-min-words="3"
-      data-debounce-ms="350">
-    </div>
-    <script src="../dist/index.global.js"></script>
+    <h1>campaignId landing example</h1>
+    <p class="muted">
+      Add <code>?campaignId=summer_sale_1</code> to the URL. This example will call Inops and render products.
+    </p>
+
+    <div id="status" class="muted"></div>
+    <h2>Products</h2>
+    <div id="grid" class="grid"></div>
+
+    <script>
+      (async () => {
+        const searchKey = "PASTE_YOUR_SEARCH_KEY";
+        const client = window.Inops.createInopsClient({
+          searchKey,
+          apiUrl: window.__INOPS_API_BASE_URL__ || "http://localhost:3000",
+        });
+
+        const campaignId = client.readCampaignIdFromUrl("campaignId");
+        if (!campaignId) {
+          document.getElementById("status").textContent = "No campaignId in URL.";
+          return;
+        }
+
+        document.getElementById("status").textContent = `Running campaignId=${campaignId}…`;
+        const result = await client.runCampaignAndCollect(campaignId, { timeoutMs: 4500 });
+
+        if (result.summary) document.getElementById("status").textContent = result.summary;
+        const grid = document.getElementById("grid");
+        grid.innerHTML = "";
+
+        (result.products || []).slice(0, 12).forEach((p) => {
+          const el = document.createElement("div");
+          el.className = "card";
+          el.innerHTML = `
+            <div><strong>${(p.title || p.productId || "").toString()}</strong></div>
+            <div class="muted">${(p.productId || "").toString()}</div>
+          `;
+          grid.appendChild(el);
+        });
+      })().catch((e) => {
+        document.getElementById("status").textContent = `Error: ${e && e.message ? e.message : e}`;
+      });
+    </script>
   </body>
-  </html>
+</html>
 
 
