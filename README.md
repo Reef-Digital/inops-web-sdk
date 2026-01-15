@@ -1,111 +1,101 @@
 # Inops Web SDK
 
-Framework‑agnostic JavaScript SDK to embed Inops AI Search in any shop (Liquid, PHP, static sites, React/Vue/Next). Zero dependencies; ships as a single browser bundle and an ESM module.
+This SDK helps you integrate Inops **search** and **campaignId landings** into your storefront using a **Search Key** (public read-only key).
 
-## Features
-- Single script tag (IIFE); no build step required
-- Auto‑scan mounts via `data-widget="inops-search"`
-- Imperative API: `window.Inops.mount/unmount/scanAndMount`
-- Secure header auth (Search Key) and SSE streaming
-- Minimal, expandable vertical list + summary
+## Install (NPM)
 
----
-
-## Quick Start (CDN)
-
-```html
-<div
-  data-widget="inops-search"
-  data-search-key="YOUR_SEARCH_KEY"
-  data-api-url="https://api.inops.dev"
-  data-min-words="3"
-  data-debounce-ms="350">
-</div>
-
-<script
-  src="https://cdn.inops.io/inops-web-sdk@1.0.0/inops.min.js"
-  src="https://cdn.inops.io/inops-web-sdk@1.0.0/inops.min.js"
-  integrity="sha384-mqekyj1Rt7b+a8CB7it1Uze5lwHffZgza+bqd/0ewQNnupKKN4fIWoKcQfCxa9Gi"
-  crossorigin="anonymous"
-  referrerpolicy="no-referrer">
-</script>
+```bash
+npm i @inops/web-sdk
 ```
 
-The SDK auto‑scans and mounts the widget. Change any `data-*` attribute to configure behavior.
+## Install (Script tag)
 
----
-
-## Imperative API (SPAs)
+Use a pinned build from your CDN/build pipeline:
 
 ```html
-<div id="mySearch"></div>
+<script src="https://YOUR_CDN/inops-web-sdk@1.1.0/index.global.js"></script>
+```
+
+Optionally override the API base at runtime:
+
+```html
 <script>
-  Inops.mount('#mySearch', {
-    searchKey: 'YOUR_SEARCH_KEY',
-    apiUrl: 'https://api.inops.dev',
-    minWordsTrigger: 3,
-    debounceMs: 350
-  });
-  // Inops.unmount('#mySearch')
+  window.__INOPS_API_BASE_URL__ = "https://api.inops.io";
 </script>
-
----
-
-## Events (optional)
-Listen for DOM events to integrate analytics or compose a custom UI:
-
-```js
-const el = document.querySelector('[data-widget="inops-search"]')
-el.addEventListener('inops:ready',   () => {})
-el.addEventListener('inops:start',   () => {})
-el.addEventListener('inops:results', (e) => {
-  // e.detail = { products, summary, meta, sessionId }
-})
-el.addEventListener('inops:error',   (e) => console.warn(e.detail))
 ```
 
----
+## Search widget (quick)
 
-## Install & Build (local)
+```html
+<div data-widget="inops-search" data-search-key="YOUR_SEARCH_KEY"></div>
+<script src="https://YOUR_CDN/inops-web-sdk@1.1.0/index.global.js"></script>
+```
+
+## Typed client (recommended)
+
+```ts
+import { createInopsClient } from "@inops/web-sdk";
+
+const client = createInopsClient({
+  searchKey: "YOUR_SEARCH_KEY",
+  apiUrl: "https://api.inops.io",
+});
+```
+
+### Search
+
+```ts
+const { sessionId } = await client.search("kid longboard beginner");
+
+if (sessionId) {
+  const unsubscribe = client.subscribeToSessionSse(sessionId, (evt) => {
+    // evt contains streamed envelopes; pick widgets to render
+  });
+}
+```
+
+## campaignId landing (v1.1)
+
+### Concept
+
+- The merchant creates a campaign in the Inops portal and defines:
+  - `campaignId` (merchant-defined id)
+  - `searchTerm` (what should be executed)
+  - TTL (how long the campaign stays available)
+- Your landing URL includes `?campaignId=…`.
+- The SDK sends `userInput.type='campaignId'` and Inops returns relevant products.
+
+### Minimal “auto-run from URL” example
+
+```ts
+const campaignId = client.readCampaignIdFromUrl("campaignId");
+if (campaignId) {
+  const { products, summary } = await client.runCampaignAndCollect(campaignId, {
+    timeoutMs: 4500,
+  });
+  // render products + summary
+}
+```
+
+### Failure behavior (important)
+
+If a campaign is missing or expired, the backend returns a safe empty result (no products).
+
+Recommended UI:
+- show a neutral fallback (e.g. “No results.”)
+- optionally fall back to your default collection/grid
+
+## Examples
+
+- `examples/plain.html`
+- `examples/shopify.liquid`
+- `examples/woocommerce.php`
+
+## Build
 
 ```bash
-npm i
-npm run build        # ESM + IIFE + d.ts in dist/
-node scripts/sri.js  # prints SRI for dist/inops.min.js
+npm run typecheck
+npm run build
 ```
-
-Outputs:
-- `dist/inops.min.js` (IIFE, global `Inops`)
-- `dist/index.js` (ESM)
-- `dist/index.d.ts` (types)
-
-## Development
-
-```bash
-npm run dev         # watch build (IIFE)
-```
-
----
-
-## Security
-- Always pin the CDN version and use SRI
-- Search Key is scoped/rotatable; sent via headers (`X-Search-Key`, `Authorization: SearchKey`)
-
----
-
-## Shopify
-See `examples/shopify.liquid` for a Liquid snippet that reads a key from `shop.metafields.inops.search_key`.
-
----
-
-## Troubleshooting
-- `searchKey.missing`: Ensure `data-search-key` is set or pass `searchKey` in `mount`.
-- 401/403: Check your Search Key and API base URL; confirm CORS config.
-- No streaming: If backend doesn’t return a `sessionId`, results still render but without incremental updates; check backend logs.
-
----
-
-## License
-MIT © Reef Digital
 
 
