@@ -4,7 +4,10 @@ import type { InopsClientOptions } from './client'
 export type MountOptions = {
   searchKey: string
   apiUrl?: string
+  /** @deprecated Use minCharsTrigger instead. Minimum number of words before triggering search. */
   minWordsTrigger?: 2 | 3
+  /** Minimum number of characters before triggering search (default: 3, matching backend validation) */
+  minCharsTrigger?: number
   debounceMs?: number
   layout?: 'inline'
 }
@@ -131,7 +134,11 @@ export function mount(target: string | Element, options: MountOptions): Unsubscr
   }
   const client = createInopsClient(cfg)
 
-  const minWordsTrigger = options.minWordsTrigger ?? 3
+  // Prefer character-based triggering (default 3, matching backend validation)
+  // Fall back to word-based if minCharsTrigger not provided but minWordsTrigger is set
+  const minCharsTrigger = options.minCharsTrigger ?? 3
+  const minWordsTrigger = options.minWordsTrigger // Only used if minCharsTrigger not explicitly set and legacy option provided
+  const useCharBased = options.minCharsTrigger !== undefined || !options.minWordsTrigger
   const debounceMs = options.debounceMs ?? 350
 
   const ui = buildInlineUi(el)
@@ -141,7 +148,13 @@ export function mount(target: string | Element, options: MountOptions): Unsubscr
   async function run(q: string) {
     const value = (q || '').trim()
     if (!value) return
-    if (value.split(/\s+/).length < minWordsTrigger) return
+    
+    // Use character-based triggering (modern default) or word-based (legacy)
+    if (useCharBased) {
+      if (value.length < minCharsTrigger) return
+    } else {
+      if (minWordsTrigger && value.split(/\s+/).filter(Boolean).length < minWordsTrigger) return
+    }
 
     ui.btn.disabled = true
     ui.clearList()
@@ -199,12 +212,15 @@ export function scanAndMount() {
     const el = node as HTMLElement
     const searchKey = el.dataset.searchKey || ''
     const apiUrl = el.dataset.apiUrl || ''
-    const minWords = numAttr(el.dataset.minWords, 3)
+    // Support both data-min-chars (new) and data-min-words (legacy)
+    const minChars = el.dataset.minChars
+    const minWords = el.dataset.minWords
     const debounceMs = numAttr(el.dataset.debounceMs, 350)
     mount(el, {
       searchKey,
       apiUrl,
-      minWordsTrigger: minWords === 2 ? 2 : 3,
+      ...(minChars ? { minCharsTrigger: numAttr(minChars, 3) } : {}),
+      ...(minWords && !minChars ? { minWordsTrigger: numAttr(minWords, 3) === 2 ? 2 : 3 } : {}),
       debounceMs,
       layout: 'inline',
     })

@@ -1,6 +1,6 @@
 {
   "name": "@inops/web-sdk",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Inops Web SDK (search + campaignId landing helpers)",
   "license": "MIT",
   "main": "dist/index.cjs",
