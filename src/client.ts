@@ -27,7 +27,7 @@ export type Unsubscribe = () => void
 function normalizeBaseUrl(apiUrl?: string): string {
   const fromGlobal =
     typeof window !== 'undefined' ? (window as any).__INOPS_API_BASE_URL__ : ''
-  return String(apiUrl || fromGlobal || 'http://localhost:3000')
+  return String(apiUrl || fromGlobal || 'https://apps.inops.io')
     .trim()
     .replace(/\/$/, '')
 }
