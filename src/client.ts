@@ -213,8 +213,10 @@ export function createInopsClient(options: InopsClientOptions) {
     )
   }
 
+  const MAX_QUERY_LENGTH = 100
+
   async function search(query: string, opts?: Partial<InopsFlowRequest>) {
-    const q = String(query || '').trim()
+    const q = String(query || '').trim().slice(0, MAX_QUERY_LENGTH)
     if (!q) throw new Error('query.required')
     if (q.length < 3) throw new Error('query.too_short: query must be at least 3 characters')
     return start({ ...(opts || {}), userInput: { type: 'search', value: q } })
